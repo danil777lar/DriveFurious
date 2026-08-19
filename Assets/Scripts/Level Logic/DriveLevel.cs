@@ -19,14 +19,17 @@ public class DriveLevel : LevelProcessor
 
     public override void TryStopLevel(StopData data)
     {
-        StopLevel(data);
-        if (data.StopType == LevelStopType.Win)
+        if (IsLevelPlaying)
         {
-            _gameStateService.SetGameState(GameStates.Win);
-        }
-        else if (data.StopType == LevelStopType.Fail)
-        {
-            _gameStateService.SetGameState(GameStates.Fail);
+            StopLevel(data);
+            if (data.StopType == LevelStopType.Win)
+            {
+                _gameStateService.SetGameState(GameStates.Win);
+            }
+            else if (data.StopType == LevelStopType.Fail)
+            {
+                _gameStateService.SetGameState(GameStates.Fail);
+            }
         }
     }
 

@@ -370,6 +370,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7353562373471791327}
   - component: {fileID: 2016224437282833969}
+  - component: {fileID: 1538048097780392161}
   m_Layer: 0
   m_Name: DI Container
   m_TagString: Untagged
@@ -415,6 +416,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _dontDestroyOnLoad: 0
+--- !u!114 &1538048097780392161
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5451613728518146836}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d35c1850fb0253f4db8825720f670c3d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Larje.Core.Tools.ProjectInitialization
+  targetFrameRate: 120
+  logEnabled: 0
 --- !u!1 &6084036847095919637
 GameObject:
   m_ObjectHideFlags: 0
