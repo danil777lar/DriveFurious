@@ -13,6 +13,9 @@ public class WheelController : MonoBehaviour
     private int _groundContactCount;
     private bool _isKilled;
 
+    public CarController Car => car;
+    public Rigidbody WheelBody => wheelBody;
+    public Transform Anchor => anchor;
     public bool IsGrounded => _groundContactCount > 0;
 
     private void Start()
