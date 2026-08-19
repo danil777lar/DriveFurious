@@ -24,7 +24,7 @@ public class PlayScreen : UIScreen
 
     private void OnRestartButtonClicked()
     {
-        _gameStateService.StartGame();
+        _gameStateService.RestartGame();
     }
 
     public class Args : UIScreen.Args

@@ -22,6 +22,7 @@ MonoBehaviour:
     UseFlags: 0
     Values:
     - Start
+    - Restart
   - Name: LevelStopType
     UseFlags: 0
     Values:

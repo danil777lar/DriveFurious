@@ -12,10 +12,46 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 59bd573955144c619b70e7c0d6430413, type: 3}
   m_Name: Wheel_Default
   m_EditorClassIdentifier: Assembly-CSharp::WheelConfig
-  <ReactionTorqueMultiplier>k__BackingField: 0.0015
+  <ReactionTorqueMultiplier>k__BackingField: 0.002
+  <ReactionTorqueByGroundedRatio>k__BackingField:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.5
+      value: 0.25
+      inSlope: 0.99999994
+      outSlope: 0.99999994
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 1
+      outSlope: 1
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  <RollingResistance>k__BackingField: 5
   <SuspensionRestLength>k__BackingField: 0.3
-  <SuspensionStiffness>k__BackingField: 60
-  <SuspensionDamping>k__BackingField: 2
-  <TractionStiffness>k__BackingField: 500
-  <TractionDamping>k__BackingField: 5
+  <SuspensionStiffness>k__BackingField: 100
+  <SuspensionDamping>k__BackingField: 5
+  <MaxSuspensionTravel>k__BackingField: 0.15
+  <TractionStiffness>k__BackingField: 200
+  <TractionDamping>k__BackingField: 1
+  <MaxDriveTravel>k__BackingField: 0.01
   <MaxMountForce>k__BackingField: 500

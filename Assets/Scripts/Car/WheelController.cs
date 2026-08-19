@@ -10,9 +10,15 @@ public class WheelController : MonoBehaviour
     [SerializeField] private bool isDriven = true;
     [SerializeField] private Vector3 spinAxis = Vector3.right;
 
+    private int _groundContactCount;
+
+    public bool IsGrounded => _groundContactCount > 0;
+
     private void Start()
     {
+        wheelBody.angularDamping = config.RollingResistance;
         SnapToRestPosition();
+        car.RegisterWheel(() => IsGrounded);
     }
 
     private void FixedUpdate()
@@ -38,7 +44,9 @@ public class WheelController : MonoBehaviour
 
         Vector3 torque = wheelBody.transform.TransformDirection(spinAxis) * car.WheelTorque;
         wheelBody.AddTorque(torque);
-        car.Body.AddTorque(-torque * config.ReactionTorqueMultiplier);
+
+        float reactionScale = config.ReactionTorqueByGroundedRatio.Evaluate(car.GetGroundedRatio());
+        car.Body.AddTorque(-torque * config.ReactionTorqueMultiplier * reactionScale);
     }
 
     private void ApplyMountForces()
@@ -53,22 +61,61 @@ public class WheelController : MonoBehaviour
         Vector3 anchorVelocity = body.GetPointVelocity(anchorPosition);
 
         Vector3 offset = wheelBody.position - anchorPosition;
-        Vector3 relativeVelocity = wheelBody.linearVelocity - anchorVelocity;
-
-        float verticalOffset = Vector3.Dot(offset, up) + config.SuspensionRestLength;
         float driveOffset = Vector3.Dot(offset, drive);
 
-        float verticalVelocity = Vector3.Dot(relativeVelocity, up);
-        float driveVelocity = Vector3.Dot(relativeVelocity, drive);
+        if (Mathf.Abs(driveOffset) > config.MaxDriveTravel)
+        {
+            float clampedDriveOffset = Mathf.Sign(driveOffset) * config.MaxDriveTravel;
+            wheelBody.position += drive * (clampedDriveOffset - driveOffset);
+            offset = wheelBody.position - anchorPosition;
+        }
 
+        float verticalOffset = Vector3.Dot(offset, up) + config.SuspensionRestLength;
+
+        if (Mathf.Abs(verticalOffset) > config.MaxSuspensionTravel)
+        {
+            float clampedVerticalOffset = Mathf.Sign(verticalOffset) * config.MaxSuspensionTravel;
+            wheelBody.position += up * (clampedVerticalOffset - verticalOffset);
+            offset = wheelBody.position - anchorPosition;
+            verticalOffset = clampedVerticalOffset;
+        }
+
+        Vector3 relativeVelocity = wheelBody.linearVelocity - anchorVelocity;
+        float verticalVelocity = Vector3.Dot(relativeVelocity, up);
         float verticalForce = -config.SuspensionStiffness * verticalOffset - config.SuspensionDamping * verticalVelocity;
+
+        float driveVelocity = Vector3.Dot(relativeVelocity, drive);
         float driveForce = -config.TractionStiffness * driveOffset - config.TractionDamping * driveVelocity;
 
         Vector3 forceOnWheel = up * verticalForce + drive * driveForce;
         forceOnWheel = Vector3.ClampMagnitude(forceOnWheel, config.MaxMountForce);
 
         wheelBody.AddForce(forceOnWheel);
-        body.AddForceAtPosition(-forceOnWheel, anchorPosition);
+
+        if (IsGrounded)
+        {
+            body.AddForceAtPosition(-forceOnWheel, anchorPosition);
+        }
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (collision.rigidbody == car.Body)
+        {
+            return;
+        }
+
+        _groundContactCount++;
+    }
+
+    private void OnCollisionExit(Collision collision)
+    {
+        if (collision.rigidbody == car.Body)
+        {
+            return;
+        }
+
+        _groundContactCount--;
     }
 
     private void OnDrawGizmos()
@@ -80,7 +127,7 @@ public class WheelController : MonoBehaviour
 
         Vector3 wheelPosition = wheelBody.position;
 
-        Gizmos.color = isDriven ? Color.cyan : Color.gray;
+        Gizmos.color = IsGrounded ? (isDriven ? Color.cyan : Color.gray) : Color.white;
         Gizmos.DrawWireSphere(wheelPosition, 0.15f);
 
         Gizmos.color = Color.yellow;
