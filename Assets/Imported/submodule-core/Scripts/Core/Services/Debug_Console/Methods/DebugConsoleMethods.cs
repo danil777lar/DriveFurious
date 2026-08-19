@@ -1,0 +1,228 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Larje.Core;
+using Larje.Core.Services;
+using Larje.Core.Services.UI;
+using ProjectConstants;
+using UnityEngine;
+using UnityEngine.AddressableAssets;
+
+namespace Larje.Core.Services.DebugConsole
+{
+    public static partial class DebugConsoleMethods
+    {
+        #region Data
+
+        [MethodGroup("Data")]
+        public static void Save(string saveName = "")
+        {
+            IDataService dataService = DIContainer.GetService<IDataService>();
+            dataService.SaveGameData(saveName);
+        }
+        
+        [MethodGroup("Data")]
+        public static void Load(string saveName = "")
+        {
+            IDataService dataService = DIContainer.GetService<IDataService>();
+            dataService.LoadGameData(saveName);
+        }
+
+        #endregion
+        
+        #region Currency
+
+        [MethodGroup("Currency")]
+        public static void AddCurrency(CurrencyType type, CurrencyPlacementType place, int count)
+        {
+            ICurrencyService currencyService = DIContainer.GetService<ICurrencyService>();
+            currencyService.AddCurrency(new CurrencyOperationData { Currency = type, Placement = place, Amount = count });
+        }
+
+        [MethodGroup("Currency")]
+        public static void SpendCurrency(CurrencyType type, CurrencyPlacementType place, int count)
+        {
+            ICurrencyService currencyService = DIContainer.GetService<ICurrencyService>();
+            currencyService.TrySpendCurrency(new CurrencyOperationData { Currency = type, Placement = place, Amount = count });
+        }
+
+        [MethodGroup("Currency")]
+        public static void SetCurrency(CurrencyType type, CurrencyPlacementType place, int count)
+        {
+            ICurrencyService currencyService = DIContainer.GetService<ICurrencyService>();
+            currencyService.SetCurrency(type, place, count);
+        }
+
+        #endregion
+
+        #region Sound
+
+        [MethodGroup("Sound")]
+        public static void PlaySound(SoundType sound)
+        {
+            SoundService soundService = DIContainer.GetService<SoundService>();
+            soundService.Play(sound);
+        }
+        
+        [MethodGroup("Sound")]
+        public static void SetChannelVolume(string channel, float volume)
+        {
+            IDataService dataService = DIContainer.GetService<IDataService>();
+            dataService.SystemData.Settings.SoundData.GetChannel(channel).Volume = volume;
+        }
+
+        #endregion
+
+        #region UI
+
+        [MethodGroup("UI")]
+        public static void OpenScreen(UIScreenType screen)
+        {
+            UIService uiService = DIContainer.GetService<UIService>();
+            uiService.GetProcessor<UIScreenProcessor>().OpenScreen(new UIScreen.Args(screen));
+        }
+
+        [MethodGroup("UI")]
+        public static void OpenPopup(UIPopupType popup, UIPopupCombinationType combination)
+        {
+            UIService uiService = DIContainer.GetService<UIService>();
+            uiService.GetProcessor<UIPopupProcessor>().OpenPopup(new UIPopup.Args(popup, combination));
+        }
+
+        [MethodGroup("UI")]
+        public static void OpenToast(UIToastType toast, string text)
+        {
+            UIService uiService = DIContainer.GetService<UIService>();
+            uiService.GetProcessor<UIToastProcessor>().OpenToast(new UIToast.Args(toast, text));
+        }
+
+        #endregion
+        
+        #region Level
+
+        [MethodGroup("Level")]
+        public static void SpawnLevel()
+        {
+            ILevelManagerService levelService = DIContainer.GetService<ILevelManagerService>();
+            levelService.SpawnCurrentLevel();
+        }
+        
+        [MethodGroup("Level")]
+        public static void SetLevelIndex(int index)
+        {
+            ILevelManagerService levelService = DIContainer.GetService<ILevelManagerService>();
+            levelService.SetCurrentLevelIndex(index);
+        }
+        
+        [MethodGroup("Level")]
+        public static void StartLevel(LevelStartType startType)
+        {
+            ILevelManagerService levelService = DIContainer.GetService<ILevelManagerService>();
+            levelService.TryStartCurrentLevel(new LevelProcessor.StartData(startType));
+        }
+        
+        [MethodGroup("Level")]
+        public static void StopLevel(bool isWin, LevelStopType stopType)
+        {
+            ILevelManagerService levelService = DIContainer.GetService<ILevelManagerService>();
+            levelService.TryStopCurrentLevel(new LevelProcessor.StopData(isWin, stopType));
+        }
+        
+        // [MethodGroup("Level")]
+        // public static void SendLevelEvent(string eventName)
+        // {
+        //     ILevelManagerService levelService = DIContainer.GetService<ILevelManagerService>();
+            
+        //     List<Type> derivedTypes = AppDomain.CurrentDomain.GetAssemblies()
+        //         .SelectMany(a => a.GetTypes())
+        //         .Where(t => t.IsClass && t.IsSubclassOf(typeof(LevelEvent))).ToList();
+            
+        //     Type type = derivedTypes.FirstOrDefault(x => x.Name.ToLower() == eventName.ToLower());
+        //     if (type != null)
+        //     {
+        //         LevelEvent levelEvent = (LevelEvent) Activator.CreateInstance(type);
+        //         levelService.TrySendEventToCurrentLevel(levelEvent);
+        //     }
+        // }
+        
+        #endregion
+        
+        #region Ads
+
+        [MethodGroup("Ads")]
+        public static void SetNoAdsMode(bool noAdsActive)
+        {
+            IAdsService adsService = DIContainer.GetService<IAdsService>();
+            adsService.SetActiveNoAdsMode(noAdsActive);
+        }
+
+        [MethodGroup("Ads")]
+        public static void ShowInterstitial(int interIndex = 0)
+        {
+            IAdsService adsService = DIContainer.GetService<IAdsService>();
+            adsService.ShowInterstitial(interIndex);
+        }
+
+        [MethodGroup("Ads")]
+        public static void ShowRewarded()
+        {
+            IAdsService adsService = DIContainer.GetService<IAdsService>();
+            adsService.ShowRewarded(
+                () => Debug.Log("[Ads] Rewarded: start"),
+                () => Debug.Log("[Ads] Rewarded: click"),
+                () => Debug.Log("[Ads] Rewarded: complete"),
+                () => Debug.Log("[Ads] Rewarded: failed")
+            );
+        }
+
+        [MethodGroup("Ads")]
+        public static void ShowAppOpen()
+        {
+            IAdsService adsService = DIContainer.GetService<IAdsService>();
+            bool shown = adsService.ShowAppOpenAd();
+            Debug.Log($"[Ads] App open shown: {shown}");
+        }
+
+        [MethodGroup("Ads")]
+        public static void LogAdsStatus()
+        {
+            IAdsService adsService = DIContainer.GetService<IAdsService>();
+            Debug.Log($"[Ads] Initialized={adsService.Initialized} | Interstitial={adsService.InterstitialAdAvailable} | Rewarded={adsService.RewardedAdAvailable} | Banner={adsService.BannerShowing} (h={adsService.BannerHeight})");
+        }
+
+        #endregion
+
+        #region Objects
+
+        [MethodGroup("Objects")]
+        public static void CopyCameraPosition(float distanceForward = 5)
+        {
+            Vector3 point = Camera.main.transform.position + Camera.main.transform.forward * distanceForward;
+            LarjeSystemUtility.CopyToClipboard(point.ToString());
+        }
+        
+        [MethodGroup("Objects")]
+        public static void SpawnObject(string key, string position)
+        {
+            Vector3 pos = Vector3Extensions.Parse(position);
+            Addressables.LoadAssetAsync<GameObject>(key).Completed += handle =>
+            {
+                GameObject prefab = handle.Result;
+                GameObject instance = GameObject.Instantiate(prefab);
+                instance.transform.position = pos;
+                
+                GUIDHolder guidHolder = instance.GetComponent<GUIDHolder>();
+                if (guidHolder == null)
+                {
+                    guidHolder = instance.AddComponent<GUIDHolder>();
+                }
+                guidHolder.GenerateGUID();
+                
+                Debug.Log($"Object {instance.name} spawned at {pos} with GUID {guidHolder.GUID}");
+                LarjeSystemUtility.CopyToClipboard(guidHolder.GUID);
+            };
+        }
+        
+        #endregion
+    }
+}

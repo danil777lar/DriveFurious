@@ -1,0 +1,245 @@
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using DG.Tweening;
+using Larje.Core;
+using Larje.Core.Services;
+using ProjectConstants;
+using UnityEngine;
+
+[BindService(typeof(LocationService))]
+public class LocationService : Service
+{
+    [SerializeField] private LocationType defaultLocationType;
+    [SerializeField] private int defaultLocationEntry = 0;
+    [Space]
+    [SerializeField] private float transitionDuration = 0.5f;
+    [Space]
+    [SerializeField] private List<LocationInfo> locations;
+    
+    [InjectService] private IDataService _dataService;
+    [InjectService] private GameEventService _gameEventService;
+    [InjectService] private IGameStateService _gameStateService;
+    [InjectService] private BootstrapperService _bootstrapperService;
+
+    private bool _locationLoaded;
+    private float _transitionValue;
+    private List<ILocationEntry> _locationEntries = new List<ILocationEntry>();
+    private List<CallbackData> _locationCallbacks = new List<CallbackData>();
+
+    public float TransitionValue => _transitionValue;
+
+    public LocationInfo CurrentLocation
+    {
+        get => locations.Find(x => x.LocationType == _dataService.GameData.LocationData.CurrentLocation);
+        private set => _dataService.GameData.LocationData.CurrentLocation = value.LocationType;
+    }
+    
+    public int CurrentLocationEntry
+    {
+        get => _dataService.GameData.LocationData.CurrentLocationEntry;
+        private set => _dataService.GameData.LocationData.CurrentLocationEntry = value;
+    }
+
+    public event Action EventExitLocation;
+    public event Action EventStartLoadLocation;
+    public event Action<LocationType, int> EventFinishLoadLocation;
+    public event Action<LocationType, int> EventEnterLocation;  
+    
+    public override void Init()
+    {
+        _dataService.EventAfterLoad += OnDataLoaded;
+    }
+    
+    public void LoadLocation(LocationType locationType, int entryId = 0)
+    {
+        LocationInfo locationInfo = locations.Find(x => x.LocationType == locationType);
+        if (locationInfo != null)
+        {
+            _locationLoaded = false;
+            CurrentLocation = locationInfo;
+            CurrentLocationEntry = entryId;
+            _gameStateService.SetGameState(GameStates.Transition);
+            EventStartLoadLocation?.Invoke();
+            DOTween.To(() => 0f, value => _transitionValue = value, 1f, transitionDuration)
+                .OnComplete(() =>
+                {
+                    EventExitLocation?.Invoke();
+                    _bootstrapperService.LoadSceneAsync(locationInfo.SceneName, () =>
+                    {
+                        _locationLoaded = true;
+
+                        ApplyLightmaps();
+
+                        _gameStateService.SetGameState(GameStates.Transition);
+
+                        locationInfo.Triggers.ForEach(x => _gameEventService.SendEvent(new GameEventTrigger(x, 1f, "LocationService")));
+                        StartCoroutine(CallCallbacksNextFrame());
+                        EventFinishLoadLocation?.Invoke(locationType, entryId);
+
+                        DOTween.To(() => 1f, value => _transitionValue = value, 0f, transitionDuration)
+                            .OnComplete(() =>
+                            {
+                                _gameStateService.SetGameState(GameStates.Playing);
+                                EventEnterLocation?.Invoke(locationType, entryId); 
+                            });
+                    });
+                });
+        }
+    }
+    
+    public void AddLocationEntry(ILocationEntry entry)
+    {
+        ILocationEntry storedEntry = _locationEntries.Find(x => x.Id == entry.Id);
+        if (storedEntry != null)
+        {
+            _locationEntries.Remove(storedEntry);
+        }
+        
+        if (!_locationEntries.Contains(entry))
+        {
+            _locationEntries.Add(entry);
+        }
+    }
+    
+    public void RemoveLocationEntry(ILocationEntry locationEntry)
+    {
+        _locationEntries.Remove(locationEntry);
+    }
+
+    public bool TryGetLocationEntry(out ILocationEntry entry)
+    {
+        entry = _locationEntries.Find(x => x.Id == CurrentLocationEntry);
+        return entry != null;
+    }
+
+    public void AddLocationEnterCallback(CallbackData callbackData)
+    {
+        TryCallCallback(callbackData);
+        _locationCallbacks.Add(callbackData);
+    }
+
+    public void RemoveLocationEnterCallback(object target)
+    {
+        _locationCallbacks.RemoveAll(x => x.target == target);
+    }
+
+    public void ApplyLightmaps()
+    {
+        if (CurrentLocation.LightmapPack != null)
+        {
+            CurrentLocation.LightmapPack.Apply();
+        }
+    }
+
+    public void QuitToMenu()
+    {
+        _locationLoaded = false;
+        _gameStateService.SetGameState(GameStates.Transition);
+        DOTween.To(() => 0f, value => _transitionValue = value, 1f, transitionDuration)
+            .OnComplete(() =>
+            {
+                _bootstrapperService.LoadSceneAsync(_bootstrapperService.MenuScene, () =>
+                {
+                    DOTween.To(() => 1f, value => _transitionValue = value, 0f, transitionDuration)
+                        .OnComplete(() =>
+                        {
+                            _gameStateService.SetGameState(GameStates.Menu);
+                        });
+                });
+            });
+    }
+
+    private void OnValidate()
+    {
+        foreach (LocationInfo location in locations)
+        {
+            location.Validate();
+        }
+    }
+
+    private void TryCallCallback(CallbackData callbackData)
+    {
+        bool callNow = callbackData.anyLocation || CurrentLocation.LocationType == callbackData.locationType;
+        callNow &= callbackData.entryId < 0 || CurrentLocationEntry == callbackData.entryId;
+        callNow &= callbackData.args == null || callbackData.args.Count == 0 || callbackData.args.TrueForAll(x => CurrentLocation.LocationArgs.Contains(x));
+        callNow &= _locationLoaded;
+
+        if (callNow)
+        {
+            callbackData.action?.Invoke();
+        }
+    }
+
+    private void OnDataLoaded()
+    {
+        if (!_dataService.GameData.LocationData.Inited)
+        {
+            CurrentLocation = locations.Find(x => x.LocationType == defaultLocationType);
+            CurrentLocationEntry = defaultLocationEntry;
+
+            _dataService.GameData.LocationData.Inited = true;
+        }
+
+        LoadLocation(CurrentLocation.LocationType, CurrentLocationEntry);
+    }
+
+    private IEnumerator CallCallbacksNextFrame()
+    {
+        yield return null;
+
+        Debug.Log($"Calling location callbacks, load percent is {_bootstrapperService.LoadingProgress}");
+
+        _locationCallbacks.ForEach(TryCallCallback);
+    }
+
+    public class CallbackData
+    {
+        public object target;
+        public Action action;
+
+        public bool anyLocation = false;
+        public LocationType locationType; 
+        public int entryId = -1;
+        public List<LocationArgType> args = null; 
+
+        public CallbackData(object target, LocationType location, Action action)
+        {
+            this.target = target;
+            this.locationType = location;
+            this.action = action;
+        }
+
+        public CallbackData(object target, Action action)
+        {
+            this.target = target;
+            this.action = action;
+            this.anyLocation = true;
+        }
+    }
+    
+    [Serializable]
+    public class LocationInfo
+    {
+        [HideInInspector, SerializeField] public string inspectorName;
+
+        [SerializeField] private LocationType locationType;
+        [SerializeField] private string sceneName;
+        [SerializeField] private LightmapPackConfig lightmapPack;
+        [SerializeField] private List<TriggerConstant> triggers;
+        [SerializeField] private List<LocationArgType> locationArgs;
+        
+        public LocationType LocationType => locationType;
+        public string SceneName => sceneName;
+        public LightmapPackConfig LightmapPack => lightmapPack;
+
+        public List<TriggerConstant> Triggers => triggers;
+        public IReadOnlyCollection<LocationArgType> LocationArgs => locationArgs;
+
+        public void Validate()
+        {
+            inspectorName = locationType.ToString();
+        }
+    }
+}
