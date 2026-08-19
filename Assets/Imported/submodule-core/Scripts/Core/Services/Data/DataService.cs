@@ -34,6 +34,18 @@ namespace Larje.Core.Services
         
         private string SystemSavePath => Path.Combine(Application.persistentDataPath, _systemSaveName);
 
+        private static bool DisablePersistence
+        {
+            get
+            {
+#if UNITY_WEBGL && !UNITY_EDITOR
+                return true;
+#else
+                return false;
+#endif
+            }
+        }
+
         public override void Init()
         {
             _metaDataWriters = GetComponents<IMetaDataWriter>().ToList();
@@ -65,13 +77,24 @@ namespace Larje.Core.Services
             {
                 _gameSaveName = saveName;
             }
-            
+
             EventPreSave?.Invoke();
+
+            if (DisablePersistence)
+            {
+                return;
+            }
+
             WriteFile(GetSavePath(_gameSaveName + SAVE_FILE_EXTENSION), gameData, true);
         }
 
         public bool LoadGameData(string saveName = "")
         {
+            if (DisablePersistence)
+            {
+                return false;
+            }
+
             string save = string.IsNullOrEmpty(saveName) ? _gameSaveName : saveName;
             string path = GetSavePath(save + SAVE_FILE_EXTENSION);
             if (TryReadFile(path, CONTENT_DATA_LINE, out GameData result))
@@ -87,12 +110,24 @@ namespace Larje.Core.Services
         
         public void SaveSystemData()
         {
+            if (DisablePersistence)
+            {
+                return;
+            }
+
             WriteFile(SystemSavePath, systemData, false);
         }
-        
+
         [ContextMenu("Clear Progress")]
         public void DeleteAllData()
         {
+            if (DisablePersistence)
+            {
+                InitSystemData();
+                InitGameData();
+                return;
+            }
+
             try
             {
                 string savePath = GetSavePath();
@@ -113,6 +148,11 @@ namespace Larje.Core.Services
 
         public List<SaveMetaData> GetSaves()
         {
+            if (DisablePersistence)
+            {
+                return new List<SaveMetaData>();
+            }
+
             List<SaveMetaData> saves = new List<SaveMetaData>();
             CheckExistDirectory(GetSavePath(), false);
             string[] files = Directory.GetFiles(GetSavePath(), "*" + SAVE_FILE_EXTENSION, SearchOption.AllDirectories);
@@ -133,18 +173,30 @@ namespace Larje.Core.Services
 
         private void InitSystemData()
         {
+            if (DisablePersistence)
+            {
+                systemData = new SystemData();
+                return;
+            }
+
             if (!TryReadFile(SystemSavePath, CONTENT_DATA_LINE, out this.systemData))
             {
                 this.systemData = new SystemData();
                 WriteFile(SystemSavePath, systemData, false);
                 TryReadFile(SystemSavePath, CONTENT_DATA_LINE, out this.systemData);
             }
-            
+
             SaveSystemData();
         }
 
         private void InitGameData()
         {
+            if (DisablePersistence)
+            {
+                gameData = new GameData();
+                return;
+            }
+
             if (loadGameDataOnInit && !LoadGameData())
             {
                 gameData = new GameData();
