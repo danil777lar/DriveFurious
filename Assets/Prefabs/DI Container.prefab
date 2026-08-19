@@ -170,10 +170,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d7e9414877ba6be42b2e14a32091ed86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Larje.Core.Services.LevelManagerAddressablesService
-  editorMode: 1
-  spawnLevelOnInit: 1
+  editorMode: 0
+  spawnLevelOnInit: 0
   levelHolder: {fileID: 0}
-  levels: []
+  levels:
+  - addToRandomList: 1
+    levelPrefab:
+      m_AssetGUID: 12106798f74dba73480b32e3da0028ea
+      m_SubObjectName: 
+      m_SubObjectType: 
+      m_SubObjectGUID: 
+      m_EditorAssetChanged: 0
 --- !u!1 &2384425121099334210
 GameObject:
   m_ObjectHideFlags: 0

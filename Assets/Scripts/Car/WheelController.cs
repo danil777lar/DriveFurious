@@ -11,6 +11,7 @@ public class WheelController : MonoBehaviour
     [SerializeField] private Vector3 spinAxis = Vector3.right;
 
     private int _groundContactCount;
+    private bool _isKilled;
 
     public bool IsGrounded => _groundContactCount > 0;
 
@@ -19,12 +20,31 @@ public class WheelController : MonoBehaviour
         wheelBody.angularDamping = config.RollingResistance;
         SnapToRestPosition();
         car.RegisterWheel(() => IsGrounded);
+        car.EventKilled += OnCarKilled;
+    }
+
+    private void OnDestroy()
+    {
+        car.EventKilled -= OnCarKilled;
     }
 
     private void FixedUpdate()
     {
+        if (_isKilled)
+        {
+            return;
+        }
+
         ApplyDriveTorque();
         ApplyMountForces();
+    }
+
+    private void OnCarKilled()
+    {
+        _isKilled = true;
+        wheelBody.constraints = RigidbodyConstraints.None;
+        wheelBody.AddForce(Random.onUnitSphere * config.KillLinearImpulse, ForceMode.VelocityChange);
+        wheelBody.AddTorque(Random.onUnitSphere * config.KillAngularImpulse, ForceMode.VelocityChange);
     }
 
     private void SnapToRestPosition()

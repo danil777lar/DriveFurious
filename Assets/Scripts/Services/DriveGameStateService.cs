@@ -13,32 +13,41 @@ public class DriveGameStateService : GameStateService
 
     public override void Init()
     {
+        EventGameStateChanged += OnGameStateChanged;
         StartGame();
     }
 
-    public void StartGame()
+    public void StartGame(LevelStartType startType = LevelStartType.Start)
     {
         _uiService.GetProcessor<UIScreenProcessor>().OpenScreen(new PlayScreen.Args());
         _levelManagerService.SpawnCurrentLevel(_ =>
-            _levelManagerService.TryStartCurrentLevel(new LevelProcessor.StartData(LevelStartType.Start)));
+        {
+            _levelManagerService.TryStartCurrentLevel(new LevelProcessor.StartData(startType));
+            SetGameState(GameStates.Playing);
+        });
     }
 
-    public void RestartGame()
+    private void OnGameStateChanged(GameState previousState, GameState newState)
     {
-        _uiService.GetProcessor<UIScreenProcessor>().OpenScreen(new PlayScreen.Args());
-        _levelManagerService.SpawnCurrentLevel(_ =>
-            _levelManagerService.TryStartCurrentLevel(new LevelProcessor.StartData(LevelStartType.Restart)));
+        if (newState == GameStates.Win)
+        {
+            WinGame();
+        }
+
+        if (newState == GameStates.Fail)
+        {
+            FailGame();
+        }
     }
 
-    public void WinGame()
+    private void WinGame()
     {
-        SetGameState(GameStates.Win);
-        _uiService.GetProcessor<UIScreenProcessor>().OpenScreen(new WinScreen.Args(StartGame));
+        _levelManagerService.IncrementLevelId();
+        _uiService.GetProcessor<UIScreenProcessor>().OpenScreen(new WinScreen.Args(() => StartGame(LevelStartType.Start)));
     }
 
-    public void FailGame()
+    private void FailGame()
     {
-        SetGameState(GameStates.Fail);
-        _uiService.GetProcessor<UIScreenProcessor>().OpenScreen(new FailScreen.Args(RestartGame));
+        _uiService.GetProcessor<UIScreenProcessor>().OpenScreen(new FailScreen.Args(() => StartGame(LevelStartType.Restart)));
     }
 }

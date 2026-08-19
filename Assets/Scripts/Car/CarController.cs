@@ -15,6 +15,14 @@ public class CarController : MonoBehaviour
     public Rigidbody Body => body;
     public float WheelTorque { get; private set; }
 
+    public event Action EventKilled;
+
+    public void Kill()
+    {
+        SetThrottle(0f);
+        EventKilled?.Invoke();
+    }
+
     public void RegisterWheel(Func<bool> isGrounded)
     {
         _wheelGroundedStates.Add(isGrounded);

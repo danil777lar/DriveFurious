@@ -21,4 +21,8 @@ public class WheelConfig : ScriptableObject
 
     [field: Header("Safety")]
     [field: SerializeField] public float MaxMountForce { get; private set; } = 5000f;
+
+    [field: Header("Destruction")]
+    [field: SerializeField] public float KillLinearImpulse { get; private set; } = 5f;
+    [field: SerializeField] public float KillAngularImpulse { get; private set; } = 10f;
 }

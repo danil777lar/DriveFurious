@@ -392,6 +392,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8658273875042881783}
+  - component: {fileID: 5295347180061017542}
   - component: {fileID: 981626371689574479}
   m_Layer: 6
   m_Name: Body
@@ -417,6 +418,22 @@ Transform:
   - {fileID: 3330041175755417553}
   m_Father: {fileID: 4064309177019865404}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5295347180061017542
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8306869371340370127}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 00a78239016456c55a7b41c6adfb1314, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CarDestroyTrigger
+  car: {fileID: 1091332868141986328}
+  destroyLayerMask:
+    serializedVersion: 2
+    m_Bits: 256
 --- !u!54 &981626371689574479
 Rigidbody:
   m_ObjectHideFlags: 0

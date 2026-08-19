@@ -605,14 +605,6 @@ PrefabInstance:
       propertyPath: levelHolder
       value: 
       objectReference: {fileID: 863681486}
-    - target: {fileID: 1404595085788378236, guid: b322749809c51c2faaf14a265deca739, type: 3}
-      propertyPath: levels.Array.size
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 1404595085788378236, guid: b322749809c51c2faaf14a265deca739, type: 3}
-      propertyPath: levels.Array.data[0].levelPrefab.m_AssetGUID
-      value: 12106798f74dba73480b32e3da0028ea
-      objectReference: {fileID: 0}
     - target: {fileID: 5451613728518146836, guid: b322749809c51c2faaf14a265deca739, type: 3}
       propertyPath: m_Name
       value: DI Container

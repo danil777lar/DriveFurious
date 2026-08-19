@@ -48,9 +48,9 @@ MonoBehaviour:
     m_RotationOrder: 4
   <RollingResistance>k__BackingField: 5
   <SuspensionRestLength>k__BackingField: 0.3
-  <SuspensionStiffness>k__BackingField: 100
+  <SuspensionStiffness>k__BackingField: 50
   <SuspensionDamping>k__BackingField: 5
-  <MaxSuspensionTravel>k__BackingField: 0.15
+  <MaxSuspensionTravel>k__BackingField: 0.3
   <TractionStiffness>k__BackingField: 200
   <TractionDamping>k__BackingField: 1
   <MaxDriveTravel>k__BackingField: 0.01
