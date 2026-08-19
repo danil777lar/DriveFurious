@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59bd573955144c619b70e7c0d6430413, type: 3}
+  m_Name: Wheel_Default
+  m_EditorClassIdentifier: Assembly-CSharp::WheelConfig
+  <ReactionTorqueMultiplier>k__BackingField: 0.0015
+  <SuspensionRestLength>k__BackingField: 0.3
+  <SuspensionStiffness>k__BackingField: 60
+  <SuspensionDamping>k__BackingField: 2
+  <TractionStiffness>k__BackingField: 500
+  <TractionDamping>k__BackingField: 5
+  <MaxMountForce>k__BackingField: 500
